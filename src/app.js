@@ -2,12 +2,17 @@ const express = require("express");
 
 const app = express();
 
-app.set('case sensitive routing', true);
+const {userAuth} = require("./middlewares/UserAuth");
 
-app.use("/hello",(req,res) => {
-  console.log("Hello World");
-  res.send("Hello World");
+// app.set('case sensitive routing', true);
+
+app.use("/", userAuth);
+
+app.get("/home",(req, res) =>{
+  res.send("posted in the home");
 });
+
+
 
 app.listen(4444,() => {
   console.log("listening on port number 4444");
