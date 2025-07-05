@@ -1,19 +1,45 @@
 const express = require("express");
-
+const {connectDB} = require("./config/database");
 const app = express();
+const userModel = require("./models/user");
 
-const {userAuth} = require("./middlewares/UserAuth");
+app.use(express.json());
 
-// app.set('case sensitive routing', true);
+app.get("/feed",async (req,res)=>{
+  const user = await userModel.find({
+    emailID: req.body.emailID,
+  });
+  res.send(user);
+});
 
-app.use("/", userAuth);
+app.post("/user",async (req,res)=>{
+  const user = new userModel(req.body);
 
-app.get("/home",(req, res) =>{
-  res.send("posted in the home");
+  await user.save();
+
+  res.send("user created!!");
+
+});
+
+app.delete("/userdelete",async (req,res)=>{
+  console.log(req.body._id);
+  try{
+    const deletedUser = await userModel.findByIdAndDelete(req.body._id);
+    console.log(deletedUser);
+    res.send("user deleted");
+  }
+  catch(err){
+    console.log("Invalid User");
+  }
+  
 });
 
 
-
-app.listen(4444,() => {
-  console.log("listening on port number 4444");
+connectDB().then(() => {
+  console.log("connected to cluster0");
+  app.listen(4444,() => {
+    console.log("listening on port number 4444");
+  });
+}).catch((err)=>{
+  console.log(err);
 });
