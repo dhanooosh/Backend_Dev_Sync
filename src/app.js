@@ -2,6 +2,8 @@ const express = require("express");
 const {connectDB} = require("./config/database");
 const app = express();
 const userModel = require("./models/user");
+const { validateSignUp } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
@@ -21,12 +23,20 @@ app.get("/feed",async (req,res)=>{
 app.post("/user",async (req,res)=>{
 
   try{
-    const user = new userModel(req.body);
+    validateSignUp(req);
+    const hashedPass = await bcrypt.hash(req.body.password,10);
+    console.log(hashedPass);
+    const user = new userModel({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      emailID: req.body.emailID,
+      password: hashedPass
+    });
     await user.save();
     res.send("user created!!");
   }
   catch(err){
-    res.send(err);
+    res.status(400).send(err);
   }
 
 });
