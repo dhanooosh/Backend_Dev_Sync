@@ -20,6 +20,25 @@ app.get("/feed",async (req,res)=>{
   
 });
 
+app.post("/login",async (req,res) => {
+  try{
+    const isValidUser = await userModel.findOne({emailID: req.body.emailID});
+    console.log(isValidUser);
+    if(!isValidUser){
+      throw new Error("Not a valid user");
+    }
+    const hashed = isValidUser.password;
+    const isPasswordValid = await bcrypt.compare(req.body.password, hashed);
+    if(!isPasswordValid){
+      throw new Error("Password or emailId incorect");
+    }
+    res.send("Login successfully");
+  }
+  catch(err){
+    res.status(400).send(err.message);
+  }
+});
+
 app.post("/user",async (req,res)=>{
 
   try{
