@@ -6,19 +6,51 @@ const userModel = require("./models/user");
 app.use(express.json());
 
 app.get("/feed",async (req,res)=>{
-  const user = await userModel.find({
-    emailID: req.body.emailID,
-  });
-  res.send(user);
+  try{
+    const user = await userModel.find({
+      emailID: req.body.emailID,
+    });
+    res.send(user);
+  }
+  catch(err){
+    res.send(err);
+  }
+  
 });
 
 app.post("/user",async (req,res)=>{
-  const user = new userModel(req.body);
 
-  await user.save();
+  try{
+    const user = new userModel(req.body);
+    await user.save();
+    res.send("user created!!");
+  }
+  catch(err){
+    res.send(err);
+  }
 
-  res.send("user created!!");
+});
 
+app.patch("/userupdate/:userid",async (req,res) =>{
+  try{
+    const allowedUpdate = ["age","gender","skills"];
+    const isUpdateAllowed = Object.keys(req.body).every((key) => allowedUpdate.includes(key));
+    
+    if(!isUpdateAllowed){
+      res.status(400).send("Bad body request");
+      return;
+    }
+
+    const updatedUser = await userModel.findByIdAndUpdate(req.params.userid, req.body,{
+      new: true,
+      runValidators: true,
+    });
+    console.log(updatedUser);
+    res.send("Updated successfully!");
+  }
+  catch(err){
+    res.status(400).send(err);
+  }
 });
 
 app.delete("/userdelete",async (req,res)=>{
