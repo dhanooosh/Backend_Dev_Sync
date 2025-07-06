@@ -4,8 +4,11 @@ const app = express();
 const userModel = require("./models/user");
 const { validateSignUp } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookie = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookie());
 
 app.get("/feed",async (req,res)=>{
   try{
@@ -23,16 +26,32 @@ app.get("/feed",async (req,res)=>{
 app.post("/login",async (req,res) => {
   try{
     const isValidUser = await userModel.findOne({emailID: req.body.emailID});
-    console.log(isValidUser);
     if(!isValidUser){
       throw new Error("Not a valid user");
     }
+    const jwtsign = await jwt.sign({_id: isValidUser._id}, "jwtsign");
+    // console.log(jwtsign);
     const hashed = isValidUser.password;
     const isPasswordValid = await bcrypt.compare(req.body.password, hashed);
     if(!isPasswordValid){
       throw new Error("Password or emailId incorect");
     }
+    res.cookie("token", jwtsign);
     res.send("Login successfully");
+  }
+  catch(err){
+    res.status(400).send(err.message);
+  }
+});
+
+app.get("/profile",async (req,res) => {
+  try{
+    const jwtverify = jwt.verify(req.cookies.token,"jwtsign");
+    const user = await userModel.findById(jwtverify._id);
+    if(!user){
+      throw new Error("Invalid user");
+    }
+    res.send(user);
   }
   catch(err){
     res.status(400).send(err.message);
@@ -55,7 +74,7 @@ app.post("/user",async (req,res)=>{
     res.send("user created!!");
   }
   catch(err){
-    res.status(400).send(err);
+    res.status(400).send(err.message);
   }
 
 });
