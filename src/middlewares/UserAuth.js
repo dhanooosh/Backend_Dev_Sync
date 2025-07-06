@@ -1,11 +1,14 @@
-const userAuth = (req, res, next) => {
-  const userAuth = "xzx";
-  if("xzx" == userAuth){
-    next();
+const jwt = require("jsonwebtoken");
+const usermodel = require("../models/user");
+const userAuth = async (req, res, next) => {
+  const {token} = req.cookies;
+  const decodeId = await jwt.verify(token, "jwtsign");
+  const user = await usermodel.findById(decodeId._id);
+  if(!user){
+    throw new Error("Invalid User");
   }
-  else{
-    res.send("Invalid User");
-  }
+  req.user = user;
+  next();
 }
 
 module.exports = {

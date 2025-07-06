@@ -6,6 +6,7 @@ const { validateSignUp } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookie = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/UserAuth");
 
 app.use(express.json());
 app.use(cookie());
@@ -44,14 +45,14 @@ app.post("/login",async (req,res) => {
   }
 });
 
-app.get("/profile",async (req,res) => {
+app.get("/profile", userAuth, async (req,res) => {
   try{
-    const jwtverify = jwt.verify(req.cookies.token,"jwtsign");
-    const user = await userModel.findById(jwtverify._id);
-    if(!user){
+    // const jwtverify = jwt.verify(req.cookies.token,"jwtsign");
+    // const user = await userModel.findById(jwtverify._id);
+    if(!req.user){
       throw new Error("Invalid user");
     }
-    res.send(user);
+    res.send(req.user);
   }
   catch(err){
     res.status(400).send(err.message);
@@ -79,7 +80,7 @@ app.post("/user",async (req,res)=>{
 
 });
 
-app.patch("/userupdate/:userid",async (req,res) =>{
+app.patch("/userupdate/:userid", userAuth,async (req,res) =>{
   try{
     const allowedUpdate = ["age","gender","skills"];
     const isUpdateAllowed = Object.keys(req.body).every((key) => allowedUpdate.includes(key));
